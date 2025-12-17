@@ -1,0 +1,188 @@
+﻿@page "/tools"
+<h3>Tools</h3>
+
+<style>
+    /* Obrazy w kartach mają równą wysokość */
+    .card-img-top-uniform {
+        height: 300px;
+        object-fit: cover;
+    }
+
+    /* Karty */
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        /* Efekt hover */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+    /* Tytuły sekcji */
+    h4 {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+    }
+
+    /* Opis w karcie */
+    .card-text {
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    /* Nagłówek strony */
+    h3 {
+        color: #007bff;
+    }
+</style>
+
+<h4>Wiedza i wskaźniki</h4>
+<div class="row">
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://charts.bitbo.io/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_bitbo.png" class="card-img-top card-img-top-uniform" alt="Bitbo">
+                <div class="card-body">
+                    <h5 class="card-title">Bitbo</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    Bitcoin Rainbow Chart pokazuje historyczne ceny BTC w kontekście kolorowych stref cenowych.
+                    Idealne narzędzie dla osób analizujących trendy rynkowe.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.tradingview.com/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_tradingview.png" class="card-img-top card-img-top-uniform" alt="TradingView">
+                <div class="card-body">
+                    <h5 class="card-title">TradingView</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    TradingView oferuje rozbudowane narzędzia do analizy technicznej, wykresy i wskaźniki kryptowalutowe.
+                    Sprawdzone narzędzie dla traderów i analityków.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.coingecko.com/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_coingecko.png" class="card-img-top card-img-top-uniform" alt="CoinGecko">
+                <div class="card-body">
+                    <h5 class="card-title">CoinGecko</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    CoinGecko to agregator danych kryptowalutowych – ceny, kapitalizacja rynkowa i statystyki tokenów.
+                    Pomaga w monitorowaniu rynku w czasie rzeczywistym.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.coinmarketcap.com/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_coinmarketcap.png" class="card-img-top card-img-top-uniform" alt="CoinMarketCap">
+                <div class="card-body">
+                    <h5 class="card-title">CoinMarketCap</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    CoinMarketCap prezentuje rankingi kryptowalut, dane historyczne i analizę rynku.
+                    Idealne dla inwestorów i osób śledzących trendy.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4>Sprzęt</h4>
+<div class="row">
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.ledger.com/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_ledger.png" class="card-img-top card-img-top-uniform" alt="Ledger">
+                <div class="card-body">
+                    <h5 class="card-title">Ledger</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    Ledger to sprzętowy portfel kryptowalut offline, zapewniający wysoki poziom bezpieczeństwa kluczy prywatnych.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://trezor.io/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_trezor.png" class="card-img-top card-img-top-uniform" alt="Trezor">
+                <div class="card-body">
+                    <h5 class="card-title">Trezor</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    Trezor to kolejny popularny sprzętowy portfel kryptowalutowy, który umożliwia bezpieczne przechowywanie tokenów.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4>Giełdy i aplikacje do handlu</h4>
+<div class="row">
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.binance.com/pl" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_binance.png" class="card-img-top card-img-top-uniform" alt="Binance">
+                <div class="card-body">
+                    <h5 class="card-title">Binance</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    Binance to jedna z największych giełd kryptowalut na świecie, oferująca trading, staking i inne usługi finansowe.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-4">
+        <div class="card">
+            <a href="https://www.revolut.com/pl-PL/crypto/" target="_blank" style="text-decoration: none; color: inherit;">
+                <img src="screens/SS_revolut.png" class="card-img-top card-img-top-uniform" alt="Revolut">
+                <div class="card-body">
+                    <h5 class="card-title">Revolut</h5>
+                </div>
+            </a>
+            <div class="card-body">
+                <p class="card-text">
+                    Revolut umożliwia kupno, sprzedaż i przechowywanie kryptowalut w aplikacji mobilnej, z wygodnym dostępem dla początkujących.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+}

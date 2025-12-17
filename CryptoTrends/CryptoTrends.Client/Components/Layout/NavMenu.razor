@@ -1,0 +1,53 @@
+﻿<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 280px;">
+    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <img src="screens/Logo_Kryptiq.png" alt="Kryptiq Logo" class="me-2" style="height: 40px;">
+        <span class="fs-4">Kryptiq</span>
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <NavLink href="/" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-house me-2" style="width:16px; text-align:center;"></i>
+            Home
+        </NavLink>
+        <NavLink href="prices" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-dollar-sign me-2" style="width:16px; text-align:center;"></i>
+            Prices
+        </NavLink>
+        <NavLink href="forecast" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-chart-line me-2" style="width:16px; text-align:center;"></i>
+            Forecast
+        </NavLink>
+        <NavLink href="portfolio" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-chart-pie me-2" style="width:16px; text-align:center;"></i>
+            Portfolio
+        </NavLink>
+        <NavLink href="learn" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-graduation-cap me-2" style="width:16px; text-align:center;"></i>
+            Learn
+        </NavLink>
+        <NavLink href="tools" class="nav-link text-white" Match="NavLinkMatch.All">
+            <i class="fa-solid fa-screwdriver-wrench me-2" style="width:16px; text-align:center;"></i>
+            Tools
+        </NavLink>
+        <NavLink href="testprices" class="nav-link text-white" Match="NavLinkMatch.All">
+            test
+        </NavLink>
+    </ul>
+    <hr>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" @onchange="ChangeMode">
+        <label class="form-check-label" for="switchCheckDefault">Light/Dark mode</label>
+    </div>
+</div>
+
+@code{
+    private bool IsDarkMode = true;
+
+    private void ChangeMode(ChangeEventArgs e)
+    {
+        if (e.Value != null)
+        {
+            IsDarkMode = (bool)e.Value;
+        }
+    }
+}

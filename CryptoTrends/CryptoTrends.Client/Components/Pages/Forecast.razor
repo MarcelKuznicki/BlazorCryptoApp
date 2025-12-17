@@ -1,0 +1,187 @@
+﻿razor:
+@page "/forecast"
+@using Newtonsoft.Json
+@using Microsoft.JSInterop
+
+<h3>Bitcoin 30-Day Forecast (EMA + ATR)</h3>
+
+<style>
+    h3 {
+        color: #007bff;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .forecast-box {
+        padding: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+        table th {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+        }
+
+        table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+</style>
+
+@if (_forecast == null)
+{
+    <p>Loading forecast...</p>
+}
+else
+{
+    <div class="forecast-box">
+        <p>Current Price: $@_currentPrice</p>
+        <p>EMA Trend: @_trendDescription</p>
+    </div>
+
+    <canvas id="btcForecastChart" width="800" height="400"></canvas>
+
+    <br />
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Min Price (ATR)</th>
+                <th>Forecast Price (EMA)</th>
+                <th>Max Price (ATR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var day in _forecast)
+            {
+                <tr>
+                    <td>@day.Date.ToShortDateString()</td>
+                    <td>$@day.MinPrice.ToString("N2")</td>
+                    <td>$@day.ForecastPrice.ToString("N2")</td>
+                    <td>$@day.MaxPrice.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ForecastPoint> _forecast;
+    private double _currentPrice;
+    private string _trendDescription = "";
+
+    private List<string> _chartLabels = new();
+    private List<double> _chartForecast = new();
+    private List<double> _chartMin = new();
+    private List<double> _chartMax = new();
+    private bool _chartRendered = false;
+
+
+    [Inject] IJSRuntime JS { get; set; }
+
+    private record MarketChart(List<List<double>> prices);
+    private record ForecastPoint(DateTime Date, double ForecastPrice, double MinPrice, double MaxPrice);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadForecast();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_chartRendered && _forecast != null)
+        {
+            _chartRendered = true;
+            await JS.InvokeVoidAsync("btcForecastChart.drawMultiLineChart", _chartLabels, _chartForecast, _chartMin, _chartMax);
+        }
+    }
+
+    private async Task LoadForecast()
+    {
+        using var http = new HttpClient();
+        var url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30";
+        var json = await http.GetStringAsync(url);
+
+        var data = JsonConvert.DeserializeObject<MarketChart>(json);
+
+        var prices = data.prices
+            .Select(p => new { Time = DateTimeOffset.FromUnixTimeMilliseconds((long)p[0]).DateTime, Price = p[1] })
+            .ToList();
+
+        _currentPrice = prices.Last().Price;
+
+        // 1️⃣ Liczymy EMA (exponential moving average)
+        int period = 10; // EMA okres np. 10 dni
+        var emaList = new List<double>();
+        double multiplier = 2.0 / (period + 1);
+        for (int i = 0; i < prices.Count; i++)
+        {
+            if (i == 0)
+                emaList.Add(prices[i].Price);
+            else
+                emaList.Add((prices[i].Price - emaList[i - 1]) * multiplier + emaList[i - 1]);
+        }
+
+        double lastEMA = emaList.Last();
+        _trendDescription = lastEMA >= prices[prices.Count - 1].Price ? "Uptrend (bullish)" : "Downtrend (bearish)";
+
+        // 2️⃣ Liczymy ATR (średnia zmienność)
+        var atrList = new List<double>();
+        for (int i = 1; i < prices.Count; i++)
+        {
+            atrList.Add(Math.Abs(prices[i].Price - prices[i - 1].Price));
+        }
+        double avgATR = atrList.Count > 0 ? atrList.Average() : 0;
+
+        // 3️⃣ Tworzymy prognozę na 30 dni
+        _forecast = new List<ForecastPoint>();
+        _chartLabels = new List<string>();
+        _chartForecast = new List<double>();
+        _chartMin = new List<double>();
+        _chartMax = new List<double>();
+
+        double emaForecast = lastEMA;
+
+        for (int i = 1; i <= 30; i++)
+        {
+            // prosta dynamika EMA: dodajemy drobny ruch oparty o ATR
+            double randomFactor = 0.5 + new Random().NextDouble(); // 0.5–1.5
+            double minPrice = emaForecast - avgATR * randomFactor;
+            double maxPrice = emaForecast + avgATR * randomFactor;
+
+            var day = new ForecastPoint(
+                DateTime.Now.AddDays(i),
+                emaForecast,
+                minPrice,
+                maxPrice
+            );
+
+            _forecast.Add(day);
+            _chartLabels.Add(day.Date.ToString("MM/dd"));
+            _chartForecast.Add(day.ForecastPrice);
+            _chartMin.Add(day.MinPrice);
+            _chartMax.Add(day.MaxPrice);
+
+            // EMA kolejnego dnia = EMA dzisiejsza + drobna zmiana ATR
+            emaForecast += (0.2 - new Random().NextDouble() * 0.4) * avgATR;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
+
+js:

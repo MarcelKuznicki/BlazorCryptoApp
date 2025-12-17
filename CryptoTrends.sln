@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrends", "CryptoTrends\CryptoTrends\CryptoTrends.csproj", "{EE407368-4C46-44CC-8D4C-A977A5906AC9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoTrends.Client", "CryptoTrends\CryptoTrends.Client\CryptoTrends.Client.csproj", "{4190B2A7-EC59-4E7E-AC5E-A2FBEEB2CBC5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE407368-4C46-44CC-8D4C-A977A5906AC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE407368-4C46-44CC-8D4C-A977A5906AC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE407368-4C46-44CC-8D4C-A977A5906AC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE407368-4C46-44CC-8D4C-A977A5906AC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4190B2A7-EC59-4E7E-AC5E-A2FBEEB2CBC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4190B2A7-EC59-4E7E-AC5E-A2FBEEB2CBC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4190B2A7-EC59-4E7E-AC5E-A2FBEEB2CBC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4190B2A7-EC59-4E7E-AC5E-A2FBEEB2CBC5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9DAACB5B-BDCA-4C19-BFCF-3F60B3F0C614}
+	EndGlobalSection
+EndGlobal
