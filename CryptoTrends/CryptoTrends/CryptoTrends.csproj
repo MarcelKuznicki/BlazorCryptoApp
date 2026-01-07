@@ -11,6 +11,7 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.20" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Radzen.Blazor" Version="8.4.3" />
   </ItemGroup>
 
   <ItemGroup>

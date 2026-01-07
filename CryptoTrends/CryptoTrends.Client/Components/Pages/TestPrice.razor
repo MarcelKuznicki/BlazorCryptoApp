@@ -2,213 +2,190 @@
 @rendermode InteractiveWebAssembly
 @using Newtonsoft.Json
 @using CryptoTrends.Client.Components.Models
+@using Radzen
+@using Radzen.Blazor
+@using System.Globalization
 
-<h3>Top Cryptocurrencies</h3>
+<RadzenStack class="rz-pt-0 rz-p-md-2 rz-p-lg-4">
+    <RadzenCard Variant="Variant.Outlined">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox @bind-Value="@smooth" Name="smooth"></RadzenCheckBox>
+                <RadzenLabel Text="Smooth" Component="smooth" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox @bind-Value="@showDataLabels" Name="dataLabels"></RadzenCheckBox>
+                <RadzenLabel Text="Show Data Labels" Component="dataLabels" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox @bind-Value="@showMarkers" Name="markers"></RadzenCheckBox>
+                <RadzenLabel Text="Show Markers" Component="markers" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox @bind-Value="@sharedTooltip" Name="sharedToltip"></RadzenCheckBox>
+                <RadzenLabel Text="Shared Tooltip" Component="sharedTooltip" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
 
-<style>
-    h3 {
-        color: #007bff;
-        margin-bottom: 1.5rem;
-        font-weight: 600;
-    }
-
-    table {
-        width: 100%;
-        table-layout: fixed;
-        border-collapse: collapse;
-        background: #fff;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-        table thead th {
-            background: #007bff;
-            color: white;
-            padding: 12px 10px;
-            font-weight: 600;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-
-        table tbody tr {
-            transition: background-color 0.2s;
-        }
-
-            table tbody tr:hover {
-                background-color: rgba(0, 123, 255, 0.08);
-            }
-
-        table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.95rem;
-        }
-
-        table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-    td.positive {
-        color: #28a745;
-        font-weight: 600;
-    }
-
-    td.negative {
-        color: #dc3545;
-        font-weight: 600;
-    }
-
-    p {
-        font-size: 1rem;
-        color: #555;
-    }
-
-    .pagination {
-        margin-top: 1rem;
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-        .pagination button {
-            padding: 0.4rem 0.8rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-        }
-
-            .pagination button.disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-</style>
-
-@if (_prices == null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <table>
-        <colgroup>
-            <col style="width: 5%;">
-            <col style="width: 35%;">
-            <col style="width: 30%;">
-            <col style="width: 30%;">
-            <col style="width: 10%;">
-        </colgroup>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Price (USD)</th>
-                <th>Market Cap (USD)</th>
-                <th>24h Change (%)</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var crypto in GetPageItems())
-            {
-                var index = _prices.IndexOf(crypto);
-                var change = Math.Round((double)crypto.PriceChange24h, 2);
-                <tr>
-                    <td>@(index + 1)</td>
-                    <td>@crypto.Name (@crypto.Symbol.ToUpper())</td>
-                    <td>$@crypto.CurrentPrice.ToString("N2")</td>
-                    <td>@FormatMarketCap(crypto.MarketCap)</td>
-                    <td class="@(change >= 0 ? "positive" : "negative")">@change%</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <div class="pagination">
-        <button @onclick="PrevPage" class="@(CurrentPage == 1 ? "disabled" : "")" disabled="@(CurrentPage == 1)">Prev</button>
-        <span>Page @CurrentPage of @TotalPages</span>
-        <button @onclick="NextPage" class="@(CurrentPage == TotalPages ? "disabled" : "")" disabled="@(CurrentPage == TotalPages)">Next</button>
-    </div>
-}
+    <RadzenChart>
+        <RadzenChartTooltipOptions Shared="@sharedTooltip" />
+        <RadzenLineSeries Smooth="@smooth" Data="@revenue2023" CategoryProperty="Date" Title="2023" LineType="LineType.Dashed" ValueProperty="Revenue">
+            <RadzenMarkers Visible="@showMarkers" MarkerType="MarkerType.Square" />
+            <RadzenSeriesDataLabels Visible="@showDataLabels" />
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="@smooth" Data="@revenue2024" CategoryProperty="Date" Title="2024" ValueProperty="Revenue">
+            <RadzenMarkers Visible="@showMarkers" MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible="@showDataLabels" />
+        </RadzenLineSeries>
+        <RadzenCategoryAxis Padding="20" />
+        <RadzenValueAxis Formatter="@FormatAsUSD">
+            <RadzenGridLines Visible="true" />
+            <RadzenAxisTitle Text="Revenue in USD" />
+        </RadzenValueAxis>
+    </RadzenChart>
+</RadzenStack>
 
 @code {
-    private List<CryptoMarket> _prices;
-    private bool _running = true;
-    private int CurrentPage = 1;
-    private int PageSize = 10;
+    bool smooth = false;
+    bool sharedTooltip = true;
+    bool showDataLabels = false;
+    bool showMarkers = true;
 
-    private int TotalPages => _prices == null ? 1 : (int)Math.Ceiling((double)_prices.Count / PageSize);
-
-    protected override async Task OnInitializedAsync()
+    class DataItem
     {
-        await LoadPrices();
-        _ = RefreshLoop();
+        public string Date { get; set; }
+        public double Revenue { get; set; }
     }
 
-    private async Task RefreshLoop()
+    string FormatAsUSD(object value)
     {
-        while (_running)
+        return ((double)value).ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
+    }
+
+    DataItem[] revenue2023 = new DataItem[] {
+        new DataItem
         {
-            try
-            {
-                await Task.Delay(60000);
-                await LoadPrices();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("RefreshLoop error: " + ex);
-            }
-        }
-    }
-
-    private string FormatMarketCap(decimal value) => "$" + value.ToString("N0");
-
-    private async Task LoadPrices()
-    {
-        try
+            Date = "Jan",
+            Revenue = 234000
+        },
+        new DataItem
         {
-            using var http = new HttpClient();
-            var url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1";
-            var response = await http.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            var json = await response.Content.ReadAsStringAsync();
-            _prices = JsonConvert.DeserializeObject<List<CryptoMarket>>(json);
-        }
-        catch (Exception ex)
+            Date = "Feb",
+            Revenue = 269000
+        },
+        new DataItem
         {
-            Console.WriteLine("LOAD ERROR: " + ex);
+            Date = "Mar",
+            Revenue = 233000
+        },
+        new DataItem
+        {
+            Date = "Apr",
+            Revenue = 244000
+        },
+        new DataItem
+        {
+            Date = "May",
+            Revenue = 214000
+        },
+        new DataItem
+        {
+            Date = "Jun",
+            Revenue = 253000
+        },
+        new DataItem
+        {
+            Date = "Jul",
+            Revenue = 274000
+        },
+        new DataItem
+        {
+            Date = "Aug",
+            Revenue = 284000
+        },
+        new DataItem
+        {
+            Date = "Sept",
+            Revenue = 273000
+        },
+        new DataItem
+        {
+            Date = "Oct",
+            Revenue = 282000
+        },
+        new DataItem
+        {
+            Date = "Nov",
+            Revenue = 289000
+        },
+        new DataItem
+        {
+            Date = "Dec",
+            Revenue = 294000
         }
-    }
+    };
 
-    private IEnumerable<CryptoMarket> GetPageItems()
-    {
-        if (_prices == null) return Enumerable.Empty<CryptoMarket>();
-        return _prices.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
-    }
-
-    private void PrevPage()
-    {
-        if (CurrentPage > 1) CurrentPage--;
-    }
-
-    private void NextPage()
-    {
-        if (CurrentPage < TotalPages) CurrentPage++;
-    }
-
-    public class CryptoMarket
-    {
-        public string Id { get; set; }
-        public string Symbol { get; set; }
-        public string Name { get; set; }
-        [JsonProperty("current_price")] public decimal CurrentPrice { get; set; }
-        [JsonProperty("market_cap")] public decimal MarketCap { get; set; }
-        [JsonProperty("price_change_percentage_24h")] public decimal PriceChange24h { get; set; }
-    }
-
-    public void Dispose()
-    {
-        _running = false;
-    }
+    DataItem[] revenue2024 = new DataItem[] {
+        new DataItem
+        {
+            Date = "Jan",
+            Revenue = 334000
+        },
+        new DataItem
+        {
+            Date = "Feb",
+            Revenue = 369000
+        },
+        new DataItem
+        {
+            Date = "Mar",
+            Revenue = 333000
+        },
+        new DataItem
+        {
+            Date = "Apr",
+            Revenue = 344000
+        },
+        new DataItem
+        {
+            Date = "May",
+            Revenue = 314000
+        },
+        new DataItem
+        {
+            Date = "Jun",
+            Revenue = 353000
+        },
+        new DataItem
+        {
+            Date = "Jul",
+            Revenue = 374000
+        },
+        new DataItem
+        {
+            Date = "Aug",
+            Revenue = 384000
+        },
+        new DataItem
+        {
+            Date = "Sept",
+            Revenue = 373000
+        },
+        new DataItem
+        {
+            Date = "Oct",
+            Revenue = 382000
+        },
+        new DataItem
+        {
+            Date = "Nov",
+            Revenue = 389000
+        },
+        new DataItem
+        {
+            Date = "Dec",
+            Revenue = 394000
+        }
+    };
 }

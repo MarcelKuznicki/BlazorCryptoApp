@@ -1,6 +1,7 @@
 ﻿using Blazored.LocalStorage;
 using CryptoTrends.Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Radzen;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -9,7 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddBlazoredLocalStorage();
-
+builder.Services.AddScoped<TooltipService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
