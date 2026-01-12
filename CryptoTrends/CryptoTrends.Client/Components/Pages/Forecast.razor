@@ -1,16 +1,15 @@
 ﻿@page "/forecast"
 @rendermode InteractiveWebAssembly
+
 @using Newtonsoft.Json
 @using Microsoft.JSInterop
 @using Radzen
 @using Radzen.Blazor
 @using System.Globalization
 
-
 <h3>Bitcoin 30-Day Forecast (EMA + ATR)</h3>
 
 <style>
-    
     h3 {
         color: #007bff;
         margin-bottom: 1.5rem;
@@ -26,20 +25,17 @@
     }
 
     .chart-title {
-        margin-bottom: 0.3rem !important; /* było ~1–1.5rem */
+        margin-bottom: 0.3rem !important;
     }
 
     table {
         width: 100%;
-        margin-top: 2rem;
         border-collapse: collapse;
         background: #ffffff;
         border-radius: 15px;
         overflow: hidden;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-
-
 
         table th {
             background: #007bff;
@@ -60,60 +56,71 @@
 else
 {
     <div class="forecast-box">
-        <p>Current Price: $@_currentPrice</p>
-        <p>EMA Trend: @_trendDescription</p>
+        <p><strong>Current Price:</strong> $@_currentPrice</p>
+        <p><strong>EMA Trend:</strong> @_trendDescription</p>
     </div>
-    <br />
+
     <h3 class="chart-title">Forecast Line Chart</h3>
 
-    @if (_forecast == null)
-    {
-        <p>Loading chart...</p>
-    }
-    else
-    {
+    <RadzenStack class="rz-p-0 rz-p-md-6 rz-p-lg-2">
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenCheckBox @bind-Value="smooth" />
+                    <RadzenLabel Text="Smooth" />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenCheckBox @bind-Value="showDataLabels" />
+                    <RadzenLabel Text="Show Data Labels" />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenCheckBox @bind-Value="showMarkers" />
+                    <RadzenLabel Text="Show Markers" />
+                </RadzenStack>
+
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenCheckBox @bind-Value="sharedTooltip" />
+                    <RadzenLabel Text="Shared Tooltip" />
+                </RadzenStack>
+
+            </RadzenStack>
+        </RadzenCard>
+
         <RadzenChart>
             <RadzenChartTooltipOptions Shared="@sharedTooltip" />
 
-            <!-- EMA Forecast -->
-            <RadzenLineSeries Data="@_forecast"
+            <RadzenLineSeries Data="@chartData"
                               CategoryProperty="Date"
-                              ValueProperty="ForecastPrice"
-                              Title="EMA Forecast"
+                              ValueProperty="Forecast"
+                              Title="Forecast"
                               Smooth="@smooth">
                 <RadzenMarkers Visible="@showMarkers" />
                 <RadzenSeriesDataLabels Visible="@showDataLabels" />
             </RadzenLineSeries>
 
-            <!-- Min ATR -->
-            <RadzenLineSeries Data="@_forecast"
+            <RadzenLineSeries Data="@chartData"
                               CategoryProperty="Date"
-                              ValueProperty="MinPrice"
+                              ValueProperty="Min"
                               Title="Min (ATR)"
-                              LineType="LineType.Dashed"
-                              Smooth="@smooth">
-                <RadzenMarkers Visible="false" />
-            </RadzenLineSeries>
+                              LineType="LineType.Dashed" />
 
-            <!-- Max ATR -->
-            <RadzenLineSeries Data="@_forecast"
+            <RadzenLineSeries Data="@chartData"
                               CategoryProperty="Date"
-                              ValueProperty="MaxPrice"
+                              ValueProperty="Max"
                               Title="Max (ATR)"
-                              LineType="LineType.Dashed"
-                              Smooth="@smooth">
-                <RadzenMarkers Visible="false" />
-            </RadzenLineSeries>
+                              LineType="LineType.Dashed" />
 
-            <RadzenCategoryAxis Padding="20"
-                                FormatString="{0:MM-dd}" />
-
+            <RadzenCategoryAxis Padding="20" />
             <RadzenValueAxis Formatter="@FormatAsUSD">
                 <RadzenGridLines Visible="true" />
-                <RadzenAxisTitle Text="BTC Price (USD)" />
+                <RadzenAxisTitle Text="USD" />
             </RadzenValueAxis>
         </RadzenChart>
-    }
+    </RadzenStack>
+
     <table>
         <thead>
             <tr>
@@ -138,243 +145,92 @@ else
 }
 
 @code {
-    private List<ForecastPoint> _forecast;
+    [Inject] IJSRuntime JS { get; set; }
+
+    private List<ForecastPoint>? _forecast;
     private double _currentPrice;
     private string _trendDescription = "";
-    private List<string> _chartLabels = new();
-    private List<double> _chartForecast = new();
-    private List<double> _chartMin = new();
-    private List<double> _chartMax = new();
 
-    [Inject] IJSRuntime JS { get; set; }
+    private bool smooth;
+    private bool sharedTooltip = true;
+    private bool showDataLabels;
+    private bool showMarkers = true;
+
+    private List<ChartItem> chartData = new();
 
     private record MarketChart(List<List<double>> prices);
     private record ForecastPoint(DateTime Date, double ForecastPrice, double MinPrice, double MaxPrice);
+
+    private class ChartItem
+    {
+        public string Date { get; set; } = "";
+        public double Forecast { get; set; }
+        public double Min { get; set; }
+        public double Max { get; set; }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         await LoadForecast();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("console.log", "Forecast component rendered");
-        }
-    }
-
     private async Task LoadForecast()
     {
         using var http = new HttpClient();
-        var url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30";
-        var json = await http.GetStringAsync(url);
+        var request = new HttpRequestMessage(
+        HttpMethod.Get,
+        "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30"
+        );
 
-        var data = JsonConvert.DeserializeObject<MarketChart>(json);
+            request.Headers.Add("x-cg-demo-api-key", "CG-wm4ffY58QtHMP9xpWAhCXUxW");
+            // var response = await http.GetAsync(url);
+            var response = await http.SendAsync(request);
+                        var json = await response.Content.ReadAsStringAsync();
+        var data = JsonConvert.DeserializeObject<MarketChart>(json)!;
 
         var prices = data.prices
-            .Select(p => new { Time = DateTimeOffset.FromUnixTimeMilliseconds((long)p[0]).DateTime, Price = p[1] })
+            .Select(p => p[1])
             .ToList();
 
-        _currentPrice = prices.Last().Price;
+        _currentPrice = prices.Last();
 
-        // 1️⃣ Liczymy EMA (exponential moving average)
-        int period = 10; // EMA okres np. 10 dni
-        var emaList = new List<double>();
+        // EMA
+        int period = 10;
         double multiplier = 2.0 / (period + 1);
-        for (int i = 0; i < prices.Count; i++)
-        {
-            if (i == 0)
-                emaList.Add(prices[i].Price);
-            else
-                emaList.Add((prices[i].Price - emaList[i - 1]) * multiplier + emaList[i - 1]);
-        }
+        var ema = prices[0];
 
-        double lastEMA = emaList.Last();
-        _trendDescription = lastEMA >= prices[prices.Count - 1].Price ? "Uptrend (bullish)" : "Downtrend (bearish)";
+        foreach (var price in prices.Skip(1))
+            ema = (price - ema) * multiplier + ema;
 
-        // 2️⃣ Liczymy ATR (średnia zmienność)
-        var atrList = new List<double>();
-        for (int i = 1; i < prices.Count; i++)
-        {
-            atrList.Add(Math.Abs(prices[i].Price - prices[i - 1].Price));
-        }
-        double avgATR = atrList.Count > 0 ? atrList.Average() : 0;
+        _trendDescription = ema >= _currentPrice ? "Uptrend (bullish)" : "Downtrend (bearish)";
 
-        // 3️⃣ Tworzymy prognozę na 30 dni
-        _forecast = new List<ForecastPoint>();
-        _chartLabels = new List<string>();
-        _chartForecast = new List<double>();
-        _chartMin = new List<double>();
-        _chartMax = new List<double>();
+        // ATR
+        var atr = prices.Zip(prices.Skip(1), (a, b) => Math.Abs(b - a)).Average();
 
-        double emaForecast = lastEMA;
+        var rnd = new Random();
+        _forecast = new();
 
         for (int i = 1; i <= 30; i++)
         {
-            // prosta dynamika EMA: dodajemy drobny ruch oparty o ATR
-            double randomFactor = 0.5 + new Random().NextDouble(); // 0.5–1.5
-            double minPrice = emaForecast - avgATR * randomFactor;
-            double maxPrice = emaForecast + avgATR * randomFactor;
+            var factor = 0.5 + rnd.NextDouble();
+            var min = ema - atr * factor;
+            var max = ema + atr * factor;
 
-            var day = new ForecastPoint(
-                DateTime.Now.AddDays(i),
-                emaForecast,
-                minPrice,
-                maxPrice
-            );
+            var date = DateTime.Now.AddDays(i);
 
-            _forecast.Add(day);
-            _chartLabels.Add(day.Date.ToString("MM/dd"));
-            _chartForecast.Add(day.ForecastPrice);
-            _chartMin.Add(day.MinPrice);
-            _chartMax.Add(day.MaxPrice);
+            _forecast.Add(new ForecastPoint(date, ema, min, max));
+            chartData.Add(new ChartItem
+            {
+                Date = date.ToString("MM/dd"),
+                Forecast = ema,
+                Min = min,
+                Max = max
+            });
 
-            // EMA kolejnego dnia = EMA dzisiejsza + drobna zmiana ATR
-            emaForecast += (0.2 - new Random().NextDouble() * 0.4) * avgATR;
+            ema += (0.2 - rnd.NextDouble() * 0.4) * atr;
         }
-
-        await InvokeAsync(StateHasChanged);
-    }
-    bool smooth = false;
-    bool sharedTooltip = true;
-    bool showDataLabels = false;
-    bool showMarkers = true;
-
-    class DataItem
-    {
-        public string Date { get; set; }
-        public double Revenue { get; set; }
     }
 
     string FormatAsUSD(object value)
-    {
-        return ((double)value).ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
-    }
-
-    DataItem[] revenue2023 = new DataItem[] {
-        new DataItem
-        {
-            Date = "Jan",
-            Revenue = 234000
-        },
-        new DataItem
-        {
-            Date = "Feb",
-            Revenue = 269000
-        },
-        new DataItem
-        {
-            Date = "Mar",
-            Revenue = 233000
-        },
-        new DataItem
-        {
-            Date = "Apr",
-            Revenue = 244000
-        },
-        new DataItem
-        {
-            Date = "May",
-            Revenue = 214000
-        },
-        new DataItem
-        {
-            Date = "Jun",
-            Revenue = 253000
-        },
-        new DataItem
-        {
-            Date = "Jul",
-            Revenue = 274000
-        },
-        new DataItem
-        {
-            Date = "Aug",
-            Revenue = 284000
-        },
-        new DataItem
-        {
-            Date = "Sept",
-            Revenue = 273000
-        },
-        new DataItem
-        {
-            Date = "Oct",
-            Revenue = 282000
-        },
-        new DataItem
-        {
-            Date = "Nov",
-            Revenue = 289000
-        },
-        new DataItem
-        {
-            Date = "Dec",
-            Revenue = 294000
-        }
-    };
-
-    DataItem[] revenue2024 = new DataItem[] {
-        new DataItem
-        {
-            Date = "Jan",
-            Revenue = 334000
-        },
-        new DataItem
-        {
-            Date = "Feb",
-            Revenue = 369000
-        },
-        new DataItem
-        {
-            Date = "Mar",
-            Revenue = 333000
-        },
-        new DataItem
-        {
-            Date = "Apr",
-            Revenue = 344000
-        },
-        new DataItem
-        {
-            Date = "May",
-            Revenue = 314000
-        },
-        new DataItem
-        {
-            Date = "Jun",
-            Revenue = 353000
-        },
-        new DataItem
-        {
-            Date = "Jul",
-            Revenue = 374000
-        },
-        new DataItem
-        {
-            Date = "Aug",
-            Revenue = 384000
-        },
-        new DataItem
-        {
-            Date = "Sept",
-            Revenue = 373000
-        },
-        new DataItem
-        {
-            Date = "Oct",
-            Revenue = 382000
-        },
-        new DataItem
-        {
-            Date = "Nov",
-            Revenue = 389000
-        },
-        new DataItem
-        {
-            Date = "Dec",
-            Revenue = 394000
-        }
-    };
+        => ((double)value).ToString("C0", CultureInfo.GetCultureInfo("en-US"));
 }

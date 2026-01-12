@@ -170,7 +170,15 @@ else
         {
             using var http = new HttpClient();
             var url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1";
-            var response = await http.GetAsync(url);
+
+            var request = new HttpRequestMessage(
+        HttpMethod.Get,
+        url
+    );
+
+            request.Headers.Add("x-cg-demo-api-key", "CG-wm4ffY58QtHMP9xpWAhCXUxW");
+            // var response = await http.GetAsync(url);
+            var response = await http.SendAsync(request);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             _prices = JsonConvert.DeserializeObject<List<CryptoMarket>>(json);
