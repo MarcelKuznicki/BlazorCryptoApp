@@ -1,10 +1,25 @@
 ﻿using Blazored.LocalStorage;
 using CryptoTrends.Client;
+using CryptoTrends.Data;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Radzen;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddDbContext<PortfolioDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDefaultIdentity<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
@@ -46,5 +61,10 @@ var coinGeckoApiKey = config["CoingeckoApi:ApiKey"];
 //    client.DefaultRequestHeaders.Add("accept", "application/json");
 //    client.DefaultRequestHeaders.Add("x-cg-demo-api-key", coinGeckoApiKey);
 //});
+
+using (var scope = app.Services.CreateScope())
+{
+    await DbSeeder.SeedAdminAsync(scope.ServiceProvider);
+}
 
 app.Run();
